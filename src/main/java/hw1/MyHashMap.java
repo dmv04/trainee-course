@@ -36,21 +36,17 @@ public class MyHashMap<K, V> {
         int index = (array.length - 1) & hashCode;
 
         if (index >= array.length || array[index] == null) {
-            return null; // Ключ не найден
+            return null;
         }
 
         Node<K, V> current = array[index];
         Node<K, V> prev = null;
 
-        // Ищем ноду с нужным ключом
         while (current != null) {
             if (Objects.equals(current.key, key)) {
-                // Нашли ноду для удаления
                 if (prev == null) {
-                    // Удаляем первую ноду в цепочке
                     array[index] = current.next;
                 } else {
-                    // Удаляем ноду из середины или конца
                     prev.next = current.next;
                 }
                 size--;
@@ -60,7 +56,7 @@ public class MyHashMap<K, V> {
             current = current.next;
         }
 
-        return null; // Ключ не найден
+        return null;
     }
 
     public V get(K key) {
