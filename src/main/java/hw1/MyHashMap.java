@@ -1,6 +1,5 @@
 package hw1;
 
-import java.util.Arrays;
 import java.util.Objects;
 
 
@@ -14,26 +13,54 @@ public class MyHashMap<K, V> {
 
     private int size = 0;
 
+    class Node<K, V> {
+        final K key;
+        V value;
+        Node<K, V> next;
+
+        Node(K key, V value, Node<K, V> next) {
+            this.key = key;
+            this.value = value;
+            this.next = next;
+        }
+
+        public K getKey() {
+            return key;
+        }
+
+        public V getValue() {
+            return value;
+        }
+
+        @Override
+        public String toString() {
+            return key + "=" + value;
+        }
+    }
+
+
     public void put(K key, V value) {
         if (checkResize()) {
             resize();
         }
 
-        Key<K> keyClass = new Key<>(key);
-        int hashCode = keyClass.hashCode();
-        int index = (array.length - 1) & hashCode;
+        int index = getIndex(key);
 
-        if (index >= array.length) {
-            throw new IllegalStateException("Array index out of bounds");
+        Node<K, V> current = array[index];
+        while (current != null) {
+            if (Objects.equals(current.key, key)) {
+                current.value = value;
+                return;
+            }
+            current = current.next;
         }
 
-        array[index] = new Node<>(key, value, null);
+        array[index] = new Node<>(key, value, array[index]);
+        size++;
     }
 
     public V remove(K key) {
-        Key<K> keyClass = new Key<>(key);
-        int hashCode = keyClass.hashCode();
-        int index = (array.length - 1) & hashCode;
+        int index = getIndex(key);
 
         if (index >= array.length || array[index] == null) {
             return null;
@@ -60,35 +87,40 @@ public class MyHashMap<K, V> {
     }
 
     public V get(K key) {
-        if (checkResize()) {
-            resize();
+        int index = getIndex(key);
+
+        Node<K, V> current = array[index];
+        while (current != null) {
+            if (Objects.equals(current.key, key)) {
+                return current.value;
+            }
+            current = current.next;
         }
 
-        Key<K> keyClass = new Key<>(key);
-        int hashCode = keyClass.hashCode();
-        int index = (array.length - 1) & hashCode;
-
-        if (index >= array.length) {
-            return null;
-        }
-
-        return array[index].getValue();
-
+        return null;
     }
 
     private boolean checkResize() {
-        long nonNullCount = Arrays.stream(array)
-                .filter(Objects::nonNull)
-                .count();
-        return (float) nonNullCount / array.length >= DEFAULT_LOAD_FACTOR;
+        return (float) size / array.length >= DEFAULT_LOAD_FACTOR;
     }
 
     private void resize() {
-        @SuppressWarnings("unchecked")
-        Node<K, V>[] newArray = (Node<K, V>[]) new Node[array.length * 2];
+        Node<K, V>[] oldArray = array;
+        int newCapacity = oldArray.length * 2;
+        //noinspection unchecked
+        array = (Node<K, V>[]) new Node[newCapacity];
+        size = 0;
 
-        System.arraycopy(array, 0, newArray, 0, array.length);
+        for (Node<K, V> node : oldArray) {
+            while (node != null) {
+                put(node.key, node.value);
+                node = node.next;
+            }
+        }
+    }
 
-        array = newArray;
+    private int getIndex(K key) {
+        int hash = key == null ? 0 : key.hashCode();
+        return (array.length - 1) & hash;
     }
 }
